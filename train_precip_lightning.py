@@ -51,7 +51,7 @@ def train_regression(hparams, find_batch_size_automatically: bool = False):
     )
     # Create a Trainer instance with the specified hyperparameters and callbacks
     trainer = pl.Trainer(
-        accelerator="cpu",
+        accelerator="gpu",
         devices=1,
         fast_dev_run=hparams.fast_dev_run,
         max_epochs=hparams.epochs,
