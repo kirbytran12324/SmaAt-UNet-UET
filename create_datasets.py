@@ -8,7 +8,7 @@ from root import ROOT_DIR
 def create_dataset(input_length: int, image_ahead: int, rain_amount_thresh: float):
     """Create a dataset that has target images containing at least `rain_amount_thresh` (percent) of rain."""
 
-    precipitation_folder = ROOT_DIR / "dataset"
+    precipitation_folder = ROOT_DIR / "Radar" / "dataset"
     with h5py.File(
             precipitation_folder / "normalized.h5",
             "r",
