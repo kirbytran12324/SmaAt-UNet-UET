@@ -76,10 +76,10 @@ def get_persistence_metrics(test_dl, denormalize=True):
 
 def print_persistent_metrics(data_file):
     dataset = dataset_precip.precipitation_maps_oversampled_h5(
-        in_file=data_file, num_input_images=12, num_output_images=6, train=False
+        in_file=data_file, num_input_images=6, num_output_images=1, train=False
     )
 
-    test_dl = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=True)
+    test_dl = torch.utils.data.DataLoader(dataset, batch_size=6, shuffle=False, num_workers=0, pin_memory=True)
     loss, loss_denorm, precision, recall, accuracy, f1, csi, far = get_persistence_metrics(test_dl, denormalize=True)
     print(
         f"Loss Persistence (MSE): {loss}, MSE denormalized: {loss_denorm}, precision: {precision}, "
@@ -125,7 +125,7 @@ def plot_losses(test_losses, loss: str):
 
 if __name__ == "__main__":
     model_folder = ROOT_DIR / "checkpoints" / "comparison"
-    data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_10.h5"
+    data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_0.h5"
 
     load = False
     save_file = model_folder / "model_losses_MSE.txt"
