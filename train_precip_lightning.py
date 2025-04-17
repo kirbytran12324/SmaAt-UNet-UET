@@ -81,7 +81,7 @@ if __name__ == "__main__":
     # Set up several arguments such as --dataset_folder, --batch_size, --learning_rate, and --epochs
     parser.add_argument(
         "--dataset_folder",
-        default=ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_0.h5",
+        default=ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_6_image-ahead_1_rain-threshold_0.h5",
         type=str,
     )
     parser.add_argument("--batch_size", type=int, default=6)
@@ -103,14 +103,14 @@ if __name__ == "__main__":
     args.kernels_per_layer = 2
     args.use_oversampled_dataset = True
     args.dataset_folder = (
-            ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_0.h5"
+            ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_6_image-ahead_1_rain-threshold_0.h5"
     )
     # args.resume_from_checkpoint = f"lightning/precip_regression/{args.model}/UNetDS_Attention.ckpt"
 
     # train_regression(args, find_batch_size_automatically=False)
 
     # All the models below will be trained
-    for m in ["UNetDS_Attention"]:
+    for m in ["UNet", "UNetDS", "UNet_Attention", "UNetDS_Attention"]:
         args.model = m
         print(f"Start training model: {m}")
         train_regression(args, find_batch_size_automatically=False)

@@ -125,7 +125,7 @@ def plot_losses(test_losses, loss: str):
 
 if __name__ == "__main__":
     model_folder = ROOT_DIR / "checkpoints" / "comparison"
-    data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_0.h5"
+    data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_6_image-ahead_1_rain-threshold_0.h5"
 
     load = False
     save_file = model_folder / "model_losses_MSE.txt"
