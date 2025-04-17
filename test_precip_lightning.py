@@ -26,7 +26,7 @@ def get_model_loss(model, test_dl, loss="mse", denormalize=True):
     with torch.no_grad():
         loss_model = 0.0
         for x, y_true in tqdm(test_dl, leave=False):
-            x, y_true = x.to("cpu"), y_true.to("cpu")
+            x, y_true = x.to("gpu"), y_true.to("gpu")
             y_true = y_true.squeeze(0)
             y_pred = model(x)
             loss = loss_func(y_pred.squeeze() * factor, y_true * factor, reduction="sum") / y_true.size(0)
@@ -125,7 +125,7 @@ def plot_losses(test_losses, loss: str):
 
 if __name__ == "__main__":
     model_folder = ROOT_DIR / "checkpoints" / "comparison"
-    data_file = ROOT_DIR / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_0.h5"
+    data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_0.h5"
 
     load = False
     save_file = model_folder / "model_losses_MSE.txt"
