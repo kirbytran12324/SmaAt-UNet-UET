@@ -96,7 +96,7 @@ def get_model_losses(model_folder, data_file):
 
     models = [m for m in os.listdir(model_folder) if ".ckpt" in m]
     dataset = dataset_precip.precipitation_maps_oversampled_h5(
-        in_file=data_file, num_input_images=12, num_output_images=6, train=False
+        in_file=data_file, num_input_images=6, num_output_images=1, train=False
     )
 
     test_dl = torch.utils.data.DataLoader(dataset, batch_size=6, shuffle=False, pin_memory=True)
