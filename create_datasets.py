@@ -89,7 +89,7 @@ def create_dataset(input_length: int, image_ahead: int, rain_amount_thresh: floa
 
 
 if __name__ == "__main__":
-    rain_amount_thresh = {0.0, 0.05, 0.1}
+    rain_amount_thresh = {0.0}
     for rain_thresh in rain_amount_thresh:
-        create_dataset(5, 1, rain_thresh)
+        create_dataset(6, 1, rain_thresh)
         print(f"Dataset with rain threshold {rain_thresh} created.")
