@@ -79,9 +79,9 @@ def calculate_metrics_for_models(model_folder, threshold: float = 0.00):
     dataset = dataset_precip.precipitation_maps_oversampled_h5(
         in_file=ROOT_DIR
         / "dataset"
-        / f"train_test_input-length_12_image-ahead_6_rain-threshold_0.h5",
-        num_input_images=12,
-        num_output_images=6,
+        / f"train_test_input-length_6_image-ahead_1_rain-threshold_0.h5",
+        num_input_images=6,
+        num_output_images=1,
         train=False,
     )
 
