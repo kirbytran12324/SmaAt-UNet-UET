@@ -35,7 +35,7 @@ def train_regression(hparams, find_batch_size_automatically: bool = False):
     # Set up a series of callbacks for the training process
     checkpoint_callback = ModelCheckpoint(
         dirpath=default_save_path / net.__class__.__name__,
-        filename=net.__class__.__name__ + "_rain_threshold_50_{epoch}-{val_loss:.6f}",
+        filename=net.__class__.__name__ + "_rain_threshold_0_{epoch}-{val_loss:.6f}",
         save_top_k=-1,
         verbose=False,
         monitor="val_loss",
