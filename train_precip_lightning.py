@@ -84,7 +84,7 @@ if __name__ == "__main__":
         default=ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_6_image-ahead_1_rain-threshold_0.h5",
         type=str,
     )
-    parser.add_argument("--batch_size", type=int, default=3)
+    parser.add_argument("--batch_size", type=int, default=6)
     parser.add_argument("--learning_rate", type=float, default=0.001)
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--fast_dev_run", type=bool, default=False)
