@@ -94,7 +94,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # args.fast_dev_run = True
-    args.n_channels = 7
+    args.n_channels = 6
     args.gpus = 1
     args.model = "UNetDS_Attention"
     args.lr_patience = 4
