@@ -94,31 +94,20 @@ def get_model_losses(model_folder, data_file):
         "Persistence": [{"MSE": persistence_loss.item(), "MSE_denormalized": persistence_loss_denormalized.item()}]
     }
 
-    # Iterate through subdirectories within the model folder
-    for model_subdir in os.listdir(model_folder):
-        model_path = os.path.join(model_folder, model_subdir)
-        if os.path.isdir(model_path):
-            checkpoints = [f for f in os.listdir(model_path) if ".ckpt" in f]
-            for model_file in tqdm(checkpoints, desc=f"Models in {model_subdir}", leave=False):
-                try:
-                    model, model_name_from_file = model_classes.get_model_class(model_file)
-                    loaded_model = model.load_from_checkpoint(os.path.join(model_path, model_file))
-                    dataset = dataset_precip.precipitation_maps_oversampled_h5(
-                        in_file=data_file, num_input_images=6, num_output_images=1, train=False
-                    )
-                    test_dl = torch.utils.data.DataLoader(dataset, batch_size=6, shuffle=False, pin_memory=True)
-                    trainer = pl.Trainer(logger=False, accelerator="gpu", devices=1)  # Specify GPU if available
-                    model_loss = trainer.test(model=loaded_model, dataloaders=[test_dl], verbose=False)
+    models = [m for m in os.listdir(model_folder) if ".ckpt" in m]
+    dataset = dataset_precip.precipitation_maps_oversampled_h5(
+        in_file=data_file, num_input_images=6, num_output_images=1, train=False
+    )
 
-                    # Extract model name from the subdirectory name
-                    model_name = model_subdir
-                    if model_name in test_losses:
-                        test_losses[model_name].extend(model_loss)
-                    else:
-                        test_losses[model_name] = model_loss
-                except Exception as e:
-                    print(f"Error loading or testing {os.path.join(model_path, model_file)}: {e}")
+    test_dl = torch.utils.data.DataLoader(dataset, batch_size=6, shuffle=False, pin_memory=True)
+    trainer = pl.Trainer(logger=False)
 
+    for model_file in tqdm(models, desc="Models", leave=True):
+        model, model_name = model_classes.get_model_class(model_file)
+        loaded_model = model.load_from_checkpoint(f"{model_folder}/{model_file}")
+        model_loss = trainer.test(model=loaded_model, dataloaders=[test_dl])
+
+        test_losses[model_name] = model_loss
     return test_losses
 
 
