@@ -124,7 +124,7 @@ def plot_losses(test_losses, loss: str):
 
 
 if __name__ == "__main__":
-    model_folder = ROOT_DIR / "lightning" / "precip_regression"
+    model_folder = ROOT_DIR / "checkpoints" / "comparison"
     data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_6_image-ahead_1_rain-threshold_0.h5"
 
     load = False
