@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # train_regression(args, find_batch_size_automatically=False)
 
     # All the models below will be trained
-    for m in ["UNetDS_Attention"]:
+    for m in ["UNet", "UNetDS", "UNet_Attention", "UNetDS_Attention"]:
         args.model = m
         print(f"Start training model: {m}")
         train_regression(args, find_batch_size_automatically=False)
