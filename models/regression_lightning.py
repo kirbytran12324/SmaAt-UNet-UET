@@ -91,8 +91,8 @@ class Precip_regression_base(UNet_base):
     def add_model_specific_args(parent_parser):
         parent_parser = UNet_base.add_model_specific_args(parent_parser)
         parser = argparse.ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument("--num_input_images", type=int, default=6)
-        parser.add_argument("--num_output_images", type=int, default=1)
+        parser.add_argument("--num_input_images", type=int, default=12)
+        parser.add_argument("--num_output_images", type=int, default=6)
         parser.add_argument("--valid_size", type=float, default=0.1)
         parser.add_argument("--use_oversampled_dataset", type=bool, default=True)
         parser.n_channels = parser.parse_args().num_input_images

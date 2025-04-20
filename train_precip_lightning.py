@@ -84,18 +84,17 @@ if __name__ == "__main__":
         default=ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_6_image-ahead_1_rain-threshold_0.h5",
         type=str,
     )
-    parser.add_argument("--batch_size", type=int, default=6)
+    parser.add_argument("--batch_size", type=int, default=3)
     parser.add_argument("--learning_rate", type=float, default=0.001)
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--fast_dev_run", type=bool, default=False)
     parser.add_argument("--resume_from_checkpoint", type=str, default=None)
     parser.add_argument("--val_check_interval", type=float, default=None)
 
-
     args = parser.parse_args()
 
     # args.fast_dev_run = True
-    args.n_channels = 6
+    args.n_channels = 7
     args.gpus = 1
     args.model = "UNetDS_Attention"
     args.lr_patience = 4
@@ -111,7 +110,7 @@ if __name__ == "__main__":
     # train_regression(args, find_batch_size_automatically=False)
 
     # All the models below will be trained
-    for m in ["UNet", "UNetDS", "UNet_Attention", "UNetDS_Attention"]:
+    for m in ["UNetDS_Attention"]:
         args.model = m
         print(f"Start training model: {m}")
         train_regression(args, find_batch_size_automatically=False)
