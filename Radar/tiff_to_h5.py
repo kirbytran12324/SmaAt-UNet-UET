@@ -10,8 +10,8 @@ from scipy.interpolate import griddata
 
 
 
-tiff_dir = './dataset'
-hdf5_file = './dataset/normalized.h5'  
+tiff_dir = '../dataset'
+hdf5_file = '../dataset/normalized.h5'
 
 
 
