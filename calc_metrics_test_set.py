@@ -10,7 +10,7 @@ import numpy as np
 import json
 
 
-def get_metrics_from_model(model, test_dl, threshold=0.00, device: str = "cpu"):
+def get_metrics_from_model(model, test_dl, threshold=0.00, device: str = "gpu"):
     device = torch.device(device)
     # Precision = tp/(tp+fp)
     # Recall = tp/(tp+fn)
