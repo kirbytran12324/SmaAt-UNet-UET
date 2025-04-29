@@ -106,6 +106,7 @@ def save_to_hdf5(group_name, images, timestamps):
         group.create_dataset('timestamps', data=timestamps)
 
 
+
 def process_directory(directory):
     # Load TIFF images and timestamps
     images, timestamps = load_tiff_files(directory)
@@ -114,32 +115,42 @@ def process_directory(directory):
     train_images, train_timestamps = [], []
     test_images, test_timestamps = [], []
 
-    # Generate 7 random days for testing
-    random_days = random.sample(range(1, 32), 7)
+    # Days missing hours
+    exclude_days = {
+        (2019, 10): {'04', '08', '10', '15', '16', '17', '18', '19', '20', '23', '26', '27', '29', '30'},
+        (2020, 4): {'23'},
+        (2020, 10): {'02', '20', '23','26','27','28','29' },
+    }
+    #Choosing 5 days to test
+    random.seed(42)
+    test_days = {}
+    for year, month, max_day in [(2019, 4, 30), (2019, 10, 31), (2020, 4, 30), (2020, 10, 31)]:
+        all_days = {f"{i:02d}" for i in range(1, max_day + 1)}
+        bad_days = exclude_days.get((year, month), set())
+        valid_days = list(all_days - bad_days)
+        chosen_days = random.sample(valid_days, 5)
+        test_days[(year, month)] = set(chosen_days)
 
     # Iterate over images and timestamps
     for img, timestamp in zip(images, timestamps):
-        # Convert epoch time back to datetime object
         timestamp_dt = datetime.fromtimestamp(timestamp)
-        # If the image is from October
-        if timestamp_dt.month == 10:
-            # If the day of the month is one of the randomly selected days
-            if timestamp_dt.day in random_days:
-                # Add to testing set
-                test_images.append(img)
-                test_timestamps.append(timestamp)
-            else:
-                # Otherwise, add to training set
-                train_images.append(img)
-                train_timestamps.append(timestamp)
+        year, month, day = timestamp_dt.year, timestamp_dt.month, f"{timestamp_dt.day:02d}"
+
+        # Split the data into training and testing sets
+        if (year, month) in test_days and day in test_days[(year, month)]:
+            test_images.append(img)
+            test_timestamps.append(timestamp)
         else:
-            # If the image is not from October, add to training set
             train_images.append(img)
             train_timestamps.append(timestamp)
 
     # Save training and testing sets in HDF5 file
     save_to_hdf5('train', train_images, train_timestamps)
     save_to_hdf5('test', test_images, test_timestamps)
+
+    print("Test days per month:")
+    for k, v in test_days.items():
+        print(f"{k}: {sorted(v)}")
 
 
 if __name__ == '__main__':
