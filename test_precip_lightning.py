@@ -11,28 +11,62 @@ from root import ROOT_DIR
 from utils import dataset_precip, model_classes
 
 
-def get_model_loss(model, test_dl, loss="mse", denormalize=True):
+def get_model_metrics(model, test_dl, denormalize=True):
     model.eval()
-    if loss.lower() == "mse":
-        loss_func = nn.functional.mse_loss
-    elif loss.lower() == "mae":
-        loss_func = nn.functional.l1_loss
-    else:
-        raise ValueError(f"Unknown loss: {loss}")
-    factor = 1
-    if denormalize:
-        factor = 260.0
+    factor = 260.0 if denormalize else 1.0
+    threshold = 0.0
+
+    total_tp, total_fp, total_tn, total_fn = 0, 0, 0, 0
+    loss, loss_denorm = 0.0, 0.0
+    loss_func = nn.functional.mse_loss
 
     with torch.no_grad():
-        loss_model = 0.0
         for x, y_true in tqdm(test_dl, leave=False):
-            x, y_true = x.to("gpu"), y_true.to("gpu")
-            y_true = y_true.squeeze(0)
+            x, y_true = x.to("cpu"), y_true.to("cpu")
+            y_true = y_true.squeeze(0)  # shape: [H, W]
             y_pred = model(x)
-            loss = loss_func(y_pred.squeeze() * factor, y_true * factor, reduction="sum") / y_true.size(0)
-            loss_model += loss
-        loss_model /= len(test_dl)
-    return np.array(loss_model)
+            y_pred = y_pred.squeeze()
+
+            loss += loss_func(y_pred, y_true, reduction="sum") / y_true.size(0)
+            loss_denorm += loss_func(y_pred * factor, y_true * factor, reduction="sum") / y_true.size(0)
+
+            y_pred_adj = y_pred * factor
+            y_true_adj = y_true * factor
+
+            y_pred_mask = y_pred_adj > threshold
+            y_true_mask = y_true_adj > threshold
+
+            tn, fp, fn, tp = np.bincount(
+                y_true_mask.view(-1).int() * 2 + y_pred_mask.view(-1).int(),
+                minlength=4
+            )
+            total_tp += tp
+            total_fp += fp
+            total_tn += tn
+            total_fn += fn
+
+    precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
+    recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
+    accuracy = (total_tp + total_tn) / (total_tp + total_tn + total_fp + total_fn) if (
+        total_tp + total_tn + total_fp + total_fn) > 0 else 0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+    csi = total_tp / (total_tp + total_fn + total_fp) if (total_tp + total_fn + total_fp) > 0 else 0
+    far = total_fp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
+
+    loss /= len(test_dl)
+    loss_denorm /= len(test_dl)
+
+    return {
+        "MSE": loss.item(),
+        "MSE_denormalized": loss_denorm.item(),
+        "precision": precision,
+        "recall": recall,
+        "accuracy": accuracy,
+        "f1": f1,
+        "csi": csi,
+        "far": far
+    }
+
 
 
 def get_persistence_metrics(test_dl, denormalize=True):
@@ -76,7 +110,7 @@ def get_persistence_metrics(test_dl, denormalize=True):
 
 def print_persistent_metrics(data_file):
     dataset = dataset_precip.precipitation_maps_oversampled_h5(
-        in_file=data_file, num_input_images=12, num_output_images=6, train=False
+        in_file=data_file, num_input_images=3, num_output_images=1, train=False
     )
 
     test_dl = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=True)
@@ -90,25 +124,43 @@ def print_persistent_metrics(data_file):
 
 def get_model_losses(model_folder, data_file):
     persistence_loss, persistence_loss_denormalized = print_persistent_metrics(data_file)
-    test_losses = {
-        "Persistence": [{"MSE": persistence_loss.item(), "MSE_denormalized": persistence_loss_denormalized.item()}]
-    }
+    test_losses = {}
 
+    # Persistence metrics
+    dataset_persist = dataset_precip.precipitation_maps_oversampled_h5(
+        in_file=data_file, num_input_images=3, num_output_images=1, train=False
+    )
+    test_dl_persist = torch.utils.data.DataLoader(dataset_persist, batch_size=1, shuffle=False, num_workers=0, pin_memory=True)
+    _, _, precision, recall, accuracy, f1, csi, far = get_persistence_metrics(test_dl_persist, denormalize=True)
+    test_losses["Persistence"] = [{
+        "MSE": persistence_loss.item(),
+        "MSE_denormalized": persistence_loss_denormalized.item(),
+        "precision": precision,
+        "recall": recall,
+        "accuracy": accuracy,
+        "f1": f1,
+        "csi": csi,
+        "far": far
+    }]
+
+    # Deep learning models
     models = [m for m in os.listdir(model_folder) if ".ckpt" in m]
     dataset = dataset_precip.precipitation_maps_oversampled_h5(
-        in_file=data_file, num_input_images=12, num_output_images=6, train=False
+        in_file=data_file, num_input_images=3, num_output_images=1, train=False
     )
-
-    test_dl = torch.utils.data.DataLoader(dataset, batch_size=6, shuffle=False, pin_memory=True)
-    trainer = pl.Trainer(logger=False)
+    test_dl = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, pin_memory=True)
 
     for model_file in tqdm(models, desc="Models", leave=True):
-        model, model_name = model_classes.get_model_class(model_file)
-        loaded_model = model.load_from_checkpoint(f"{model_folder}/{model_file}")
-        model_loss = trainer.test(model=loaded_model, dataloaders=[test_dl])
+        model_class, model_name = model_classes.get_model_class(model_file)
+        loaded_model = model_class.load_from_checkpoint(f"{model_folder}/{model_file}")
+        loaded_model.eval()
+        loaded_model.to("cpu")
 
-        test_losses[model_name] = model_loss
+        metrics = get_model_metrics(loaded_model, test_dl)
+        test_losses[model_name] = [metrics]
+
     return test_losses
+
 
 
 def plot_losses(test_losses, loss: str):
@@ -125,7 +177,7 @@ def plot_losses(test_losses, loss: str):
 
 if __name__ == "__main__":
     model_folder = ROOT_DIR / "checkpoints" / "comparison"
-    data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_12_image-ahead_6_rain-threshold_0.h5"
+    data_file = ROOT_DIR / "Radar" / "dataset" / "train_test_input-length_3_image-ahead_1_rain-threshold_0.h5"
 
     load = False
     save_file = model_folder / "model_losses_MSE.txt"

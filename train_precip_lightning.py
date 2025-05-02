@@ -47,7 +47,7 @@ def train_regression(hparams, find_batch_size_automatically: bool = False):
     earlystopping_callback = EarlyStopping(
         monitor="val_loss",
         mode="min",
-        patience=hparams.lr_patience,
+        patience=hparams.es_patience,
     )
     # Create a Trainer instance with the specified hyperparameters and callbacks
     trainer = pl.Trainer(
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # train_regression(args, find_batch_size_automatically=False)
 
     # All the models below will be trained
-    for m in ["UNetDS_Attention"]:
+    for m in ["UNet", "UNetDS", "UNet_Attention", "UNetDS_Attention" ]:
         args.model = m
         print(f"Start training model: {m}")
         train_regression(args, find_batch_size_automatically=False)
